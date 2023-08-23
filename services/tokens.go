@@ -15,10 +15,10 @@ var (
 )
 
 type UserTokenService struct {
-	UserTokenRepo repository.UserTokenRepository
+	UserTokenRepo repository.UserTokenRepo
 }
 
-func NewUserTokenService(repo repository.UserTokenRepository) *UserTokenService {
+func NewUserTokenService(repo repository.UserTokenRepo) *UserTokenService {
 	return &UserTokenService{repo}
 }
 

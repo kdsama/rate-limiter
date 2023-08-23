@@ -7,6 +7,11 @@ import (
 	"github.com/kdsama/rate-limiter/entity"
 )
 
+var (
+	ErrKeyNotFound  = errors.New("key not found in the cache")
+	ErrLimiterIsNil = errors.New("cannot accept nil as value for map")
+)
+
 type LimiterCacher interface {
 	Get(key string) (*entity.Limiter, error)
 	Set(key string, value *entity.Limiter) error
@@ -31,11 +36,14 @@ func (hm *LimiterCache) Get(key string) (*entity.Limiter, error) {
 	hm.mut.RLock()
 	defer hm.mut.RUnlock()
 	if _, ok := hm.mp[key]; !ok {
-		return nil, errors.New("key not found")
+		return nil, ErrKeyNotFound
 	}
 	return hm.mp[key], nil
 }
 func (hm *LimiterCache) Set(key string, value *entity.Limiter) error {
+	if value == nil {
+		return ErrLimiterIsNil
+	}
 	hm.mut.Lock()
 	defer hm.mut.Unlock()
 	hm.mp[key] = value

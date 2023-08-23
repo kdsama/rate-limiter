@@ -9,11 +9,3 @@ type UserRepo interface {
 	CountUsersFromIDs([]string) (int64, error)
 	GetUserNamesByIDs([]string) ([]string, error)
 }
-
-type UserRepository struct {
-	UserRepo
-}
-
-func NewUserRepository(br UserRepo) *UserRepository {
-	return &UserRepository{br}
-}

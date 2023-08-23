@@ -7,11 +7,3 @@ type UserTokenRepo interface {
 	GetUserTokenByID(string) (*entity.UserToken, error)
 	GetUserByToken(string) (*entity.UserToken, error)
 }
-
-type UserTokenRepository struct {
-	UserTokenRepo
-}
-
-func NewUserTokenRepository(br UserTokenRepo) *UserTokenRepository {
-	return &UserTokenRepository{br}
-}
