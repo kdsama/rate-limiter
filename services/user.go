@@ -15,9 +15,9 @@ var (
 )
 
 type UserServicer interface {
-	Get()
-	Save()         // saves the user
-	IsAuthorized() // is authorised
+	Save(email string, name string, password string) (string, error)
+	LoginUser(email string, password string) (string, error)
+	GetUserByID(id string) (*entity.User, error)
 	GetLimitByUserID(userid string) (int, error)
 }
 type UserService struct {
@@ -73,15 +73,6 @@ func (us *UserService) SaveUser(email string, name string, password string) (str
 
 func (us *UserService) GetUserByID(id string) (*entity.User, error) {
 	user, err := us.repo.GetUserByID(id)
-
-	return user, err
-}
-func (us *UserService) GetUserNamesByIDs(ids []string) ([]string, error) {
-	user, err := us.repo.GetUserNamesByIDs(ids)
-	return user, err
-}
-func (us *UserService) CountUsersFromIDs(user_ids []string) (int64, error) {
-	user, err := us.repo.CountUsersFromIDs(user_ids)
 
 	return user, err
 }
