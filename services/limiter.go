@@ -11,7 +11,7 @@ import (
 
 type RateLimiter interface {
 	Save(url string, browserCache bool, limit int, expiry int64, throttle int32) (string, error)
-	Get(shortUrl string) (string, error)
+	Get(shortUrl string) (string, error, bool)
 }
 
 type LimiterService struct {
