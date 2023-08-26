@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -9,6 +11,14 @@ import (
 
 type Limiter struct {
 	serv services.RateLimiter
+}
+
+type InputLimiter struct {
+	Url          string `json:"url" `
+	ShortUrl     string `json:"shorturl" `
+	Expiry       int64  `json:"expiryTimestamp" `
+	Limit        int64  `json:"limit" `
+	BrowserCache bool   `json:"bcache" `
 }
 
 func NewLimiter() *Limiter {
@@ -25,6 +35,38 @@ func (l *Limiter) Handle(w http.ResponseWriter, r *http.Request) {
 
 	}
 
+}
+
+func (l *Limiter) HandleSave(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		l.HandleSaveLimiter(w, r)
+	default:
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Invalid request"))
+
+	}
+
+}
+
+func (l *Limiter) HandleSaveLimiter(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var t InputLimiter
+	err := decoder.Decode(&t)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintln(http.StatusBadRequest)))
+		return
+
+	}
+
+	ok := validateLimiter(t)
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintln(http.StatusBadRequest)))
+		return
+	}
+	l.serv.Save("someuser", t.Url, t.BrowserCache, t.Expiry)
 }
 
 func (l *Limiter) HandleGet(w http.ResponseWriter, r *http.Request) {
@@ -53,4 +95,12 @@ func (l *Limiter) HandleGet(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("Invalid request"))
 	}
+}
+
+func validateLimiter(t InputLimiter) bool {
+	if t.Url == "" {
+		return false
+	}
+
+	return true
 }

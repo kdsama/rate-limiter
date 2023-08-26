@@ -3,12 +3,12 @@ package mongo
 import (
 	"context"
 
+	mongoUtils "github.com/kdsama/rate-limiter/infra/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 type MongoRepo struct {
-	// repo *mongoUtils.MongoClient
-	db string
+	*mongoUtils.MongoClient
 }
 
 func NewMongoRepo() *MongoRepo {
@@ -16,14 +16,16 @@ func NewMongoRepo() *MongoRepo {
 }
 
 func (m *MongoRepo) Save(ctx context.Context, obj *bson.M, collection string) error {
-	col := g.repo.Client.Database(m.db).Collection(collection)
+	col := m.Client.Database(m.Db).Collection(collection)
 
 	_, err := col.InsertOne(ctx, obj)
-
-	return nil
+	return err
 }
 
-func (m *MongoRepo) Get(ctx context.Context, obj *bson.M, collection string) (*bson.M, error) {
-
-	return nil, nil
+// Get from db
+func (m *MongoRepo) GetOne(ctx context.Context, obj *bson.M, collection string) (*any, error) {
+	var result any
+	col := m.Client.Database(m.Db).Collection(collection)
+	err := col.FindOne(ctx, obj).Decode(&result)
+	return &result, err
 }
