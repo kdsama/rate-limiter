@@ -5,14 +5,15 @@ import (
 
 	mongoUtils "github.com/kdsama/rate-limiter/infra/mongo"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type MongoRepo struct {
 	*mongoUtils.MongoClient
 }
 
-func NewMongoRepo() *MongoRepo {
-	return &MongoRepo{}
+func NewMongoRepo(mu *mongoUtils.MongoClient) *MongoRepo {
+	return &MongoRepo{mu}
 }
 
 func (m *MongoRepo) Save(ctx context.Context, obj *bson.M, collection string) error {
@@ -23,9 +24,9 @@ func (m *MongoRepo) Save(ctx context.Context, obj *bson.M, collection string) er
 }
 
 // Get from db
-func (m *MongoRepo) GetOne(ctx context.Context, obj *bson.M, collection string) (*any, error) {
-	var result any
+func (m *MongoRepo) GetOne(ctx context.Context, obj *bson.M, collection string) *mongo.SingleResult {
 	col := m.Client.Database(m.Db).Collection(collection)
-	err := col.FindOne(ctx, obj).Decode(&result)
-	return &result, err
+	result := col.FindOne(ctx, obj)
+
+	return result
 }

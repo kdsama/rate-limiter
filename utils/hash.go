@@ -87,6 +87,7 @@ func GenerateUUID() string {
 }
 
 func GenerateShortURL() string {
+	rand.Seed(time.Now().UnixMicro())
 	return randSeq(rand.Intn(6))
 }
 func randSeq(n int) string {

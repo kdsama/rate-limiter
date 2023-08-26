@@ -15,14 +15,15 @@ type Limiter struct {
 
 type InputLimiter struct {
 	Url          string `json:"url" `
-	ShortUrl     string `json:"shorturl" `
 	Expiry       int64  `json:"expiryTimestamp" `
 	Limit        int64  `json:"limit" `
 	BrowserCache bool   `json:"bcache" `
 }
 
-func NewLimiter() *Limiter {
-	return &Limiter{}
+func NewLimiter(serv services.RateLimiter) *Limiter {
+	return &Limiter{
+		serv: serv,
+	}
 }
 
 func (l *Limiter) Handle(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +40,7 @@ func (l *Limiter) Handle(w http.ResponseWriter, r *http.Request) {
 
 func (l *Limiter) HandleSave(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case http.MethodGet:
+	case http.MethodPost:
 		l.HandleSaveLimiter(w, r)
 	default:
 		w.WriteHeader(http.StatusNotFound)
@@ -59,14 +60,20 @@ func (l *Limiter) HandleSaveLimiter(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-
+	fmt.Println("t is ", t)
 	ok := validateLimiter(t)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintln(http.StatusBadRequest)))
 		return
 	}
-	l.serv.Save("someuser", t.Url, t.BrowserCache, t.Expiry)
+	seq, err := l.serv.Save("someuser", t.Url, t.BrowserCache, t.Expiry)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintln(http.StatusBadRequest)))
+		return
+	}
+	w.Write([]byte(seq))
 }
 
 func (l *Limiter) HandleGet(w http.ResponseWriter, r *http.Request) {
@@ -78,11 +85,13 @@ func (l *Limiter) HandleGet(w http.ResponseWriter, r *http.Request) {
 	if len(pathSegments) == 2 {
 		endpoint := pathSegments[1]
 		//
+		fmt.Println("endpoint is ", endpoint)
 		resp, err, bc := l.serv.Get(endpoint)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 		}
+		fmt.Println("Result is ", resp)
 		if bc {
 			http.Redirect(w, r, resp, http.StatusMovedPermanently)
 		} else {

@@ -11,7 +11,7 @@ type Limiter struct {
 	UserID       string `json:"userid" bson:"userid"`
 	Url          string `json:"url" bson:"url"`
 	ShortUrl     string `json:"shorturl" bson:"shorturl"`
-	Expiry       int64  `json:"expiryTimestamp" bson:"expiryTimestamp"`
+	Expiry       int64  `json:"expiry" bson:"expiry"`
 	Limit        int64  `json:"limit" bson:"limit"`
 	BrowserCache bool   `json:"bcache" bson:"bcache"`
 
@@ -27,6 +27,7 @@ func NewLimiter(url, userid, shorturl string, expiry int64) *Limiter {
 		UserID:    userid,
 		Url:       url,
 		ShortUrl:  shorturl,
+		Expiry:    expiry,
 		CreatedAt: t,
 		UpdatedAt: t,
 	}

@@ -15,7 +15,10 @@ type MongoClient struct {
 }
 
 func GetMongoClient(uri string, db string) *MongoClient {
-	client, _ := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Print("Connected to MongoDB!")
 	return &MongoClient{Client: client, Db: db}
 }

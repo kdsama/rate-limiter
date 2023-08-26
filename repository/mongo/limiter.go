@@ -2,10 +2,12 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/kdsama/rate-limiter/entity"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
@@ -17,8 +19,8 @@ type Limiter struct {
 	db  *MongoRepo
 }
 
-func NewLimiterRepo() *Limiter {
-	db := NewMongoRepo()
+func NewLimiterRepo(col string, db *MongoRepo) *Limiter {
+
 	return &Limiter{col: limiter, db: db}
 }
 
@@ -27,6 +29,7 @@ func (m *Limiter) Save(l *entity.Limiter) error {
 	// col := g.repo.Client.Database(g.repo.Db).Collection(g.current)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
 	defer cancel()
+	fmt.Println("Expiry being saved is ", l.Expiry)
 	obj := bson.M{
 		"uuid":         l.ID,
 		"userid":       l.UserID,
@@ -62,9 +65,19 @@ func (m *Limiter) Save(l *entity.Limiter) error {
 	// return nil
 	return nil
 }
-func (m *Limiter) Get(shorturl string) (*entity.Limiter, error) {
+func (m *Limiter) Get(shorturl string) (entity.Limiter, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	obj := bson.M{"shorturl": shorturl}
+	var respObj entity.Limiter
+	res := m.db.GetOne(ctx, &obj, m.col)
 
-	return nil, nil
+	err := res.Decode(&respObj)
+	if err != nil && err != mongo.ErrNoDocuments {
+
+		return entity.Limiter{}, err
+	}
+	return respObj, nil
 }
 func (m *Limiter) UpdateByShortURL(shortulr string, limiter *entity.Limiter) error {
 
