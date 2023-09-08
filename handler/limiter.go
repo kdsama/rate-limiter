@@ -60,14 +60,15 @@ func (l *Limiter) HandleSaveLimiter(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	fmt.Println("t is ", t)
+
 	ok := validateLimiter(t)
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintln(http.StatusBadRequest)))
 		return
 	}
-	seq, err := l.serv.Save("someuser", t.Url, t.BrowserCache, t.Expiry)
+	userID := r.Header["user"][0]
+	seq, err := l.serv.Save(userID, t.Url, t.BrowserCache, t.Expiry)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintln(http.StatusBadRequest)))
